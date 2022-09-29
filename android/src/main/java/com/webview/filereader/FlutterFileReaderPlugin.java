@@ -38,6 +38,7 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
     private NetBroadcastReceiver netBroadcastReceiver;
     private FlutterPluginBinding pluginBinding;
     private QbSdkPreInitCallback preInitCallback;
+    private boolean isInitX5 = false;
 
     private Handler mainHandler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
         @Override
@@ -96,7 +97,7 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
             @Override
             public void onChangeListener(int status) {
                 // -1 没有网络
-                if (x5LoadStatus != 5 && status != -1) {
+                if (x5LoadStatus != 5 && status != -1 && isInitX5 == true) {
                     initX5(context);
                 }
             }
@@ -153,6 +154,12 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
     public void onMethodCall(MethodCall methodCall, final MethodChannel.Result result) {
         if ("isLoad".equals(methodCall.method)) {
             result.success(isLoadX5());
+        } else if ("initX5".equals(methodCall.method)) {
+            isInitX5 = true;
+            if (x5LoadStatus != 5) {
+                initX5(ctx);
+            }
+            result.success(true);
         } else if ("openFileByMiniQb".equals(methodCall.method)) {
             String filePath = (String) methodCall.arguments;
             result.success(openFileByMiniQb(filePath));

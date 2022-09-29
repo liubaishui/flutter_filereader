@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 
 class FileReader {
@@ -14,6 +16,12 @@ class FileReader {
   static const MethodChannel _channel = const MethodChannel('wv.io/FileReader');
 
   FileReader._();
+
+  Future<void> initX5() async {
+    if (Platform.isAndroid) {
+      await _channel.invokeMethod('initX5');
+    }
+  }
 
   //X5 engin  load state
   // -1 loading  5 success 10 fail
@@ -42,7 +50,9 @@ class FileReader {
   /// open file when platformview create
   /// filepath only support local path
   void openFile(int platformViewId, String filePath, Function(bool)? onOpen) {
-    MethodChannel('wv.io/FileReader' + "_$platformViewId").invokeMethod("openFile", filePath).then((openSuccess) {
+    MethodChannel('wv.io/FileReader' + "_$platformViewId")
+        .invokeMethod("openFile", filePath)
+        .then((openSuccess) {
       onOpen?.call(openSuccess);
     });
   }
