@@ -269,6 +269,8 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
+        } catch(Exception e) {
+            e.printStackTrace();
         }
 
     }
