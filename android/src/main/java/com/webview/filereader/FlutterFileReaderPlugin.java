@@ -38,7 +38,8 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
     private NetBroadcastReceiver netBroadcastReceiver;
     private FlutterPluginBinding pluginBinding;
     private QbSdkPreInitCallback preInitCallback;
-    private boolean isInitX5 = false;
+    private ActivityPluginBinding activityPluginBinding;
+    // private boolean isInitX5 = false;
 
     private Handler mainHandler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
         @Override
@@ -55,8 +56,8 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
 
     private void init(Context context, BinaryMessenger messenger) {
         ctx = context;
-        methodChannel = new MethodChannel(messenger, channelName);
-        methodChannel.setMethodCallHandler(this);
+        // methodChannel = new MethodChannel(messenger, channelName);
+        // methodChannel.setMethodCallHandler(this);
         // initX5(context);
         netBroadcastRegister(context);
     }
@@ -97,7 +98,7 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
             @Override
             public void onChangeListener(int status) {
                 // -1 没有网络
-                if (x5LoadStatus != 5 && status != -1 && isInitX5 == true) {
+                if (x5LoadStatus != 5 && status != -1) {
                     initX5(context);
                 }
             }
@@ -155,15 +156,27 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
         if ("isLoad".equals(methodCall.method)) {
             result.success(isLoadX5());
         } else if ("initX5".equals(methodCall.method)) {
-            isInitX5 = true;
-            if (x5LoadStatus != 5) {
-                initX5(ctx);
-            }
+            // 初始化X5内核
+            initTencentSmttSdk();
             result.success(true);
         } else if ("openFileByMiniQb".equals(methodCall.method)) {
             String filePath = (String) methodCall.arguments;
             result.success(openFileByMiniQb(filePath));
         }
+    }
+
+    public void initTencentSmttSdk() {
+        Log.d("initTencentSmttSdk", "Begin TencentSmttSdkInit");
+        init(pluginBinding.getApplicationContext(), pluginBinding.getBinaryMessenger());
+        pluginBinding.getPlatformViewRegistry()
+                .registerViewFactory(
+                        "FileReader",
+                        new X5FileReaderFactory(
+                                pluginBinding.getBinaryMessenger(),
+                                activityPluginBinding.getActivity(),
+                                this
+                        )
+                );
     }
 
     public boolean openFileByMiniQb(String filePath) {
@@ -202,6 +215,9 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
     public void onAttachedToEngine(FlutterPluginBinding binding) {
         Log.e("FileReader", "onAttachedToEngine");
 
+        methodChannel = new MethodChannel(binding.getBinaryMessenger(), channelName);
+        methodChannel.setMethodCallHandler(this);
+
         pluginBinding = binding;
     }
 
@@ -214,8 +230,9 @@ public class FlutterFileReaderPlugin implements MethodChannel.MethodCallHandler,
     @Override
     public void onAttachedToActivity(ActivityPluginBinding binding) {
         Log.e("FileReader", "onAttachedToActivity");
-        init(pluginBinding.getApplicationContext(), pluginBinding.getBinaryMessenger());
-        pluginBinding.getPlatformViewRegistry().registerViewFactory("FileReader", new X5FileReaderFactory(pluginBinding.getBinaryMessenger(), binding.getActivity(), this));
+        activityPluginBinding = binding;
+        // init(pluginBinding.getApplicationContext(), pluginBinding.getBinaryMessenger());
+        // pluginBinding.getPlatformViewRegistry().registerViewFactory("FileReader", new X5FileReaderFactory(pluginBinding.getBinaryMessenger(), binding.getActivity(), this));
     }
 
     @Override
